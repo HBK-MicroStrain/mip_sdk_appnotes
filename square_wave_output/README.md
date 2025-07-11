@@ -76,20 +76,21 @@ Configuration Options
 
 These values are defined at the top of the main file for clarity and to permit easy modification.
 
-| Option                     | Default                         | Notes                                                                                                                                                                         |
-|----------------------------|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| SERIAL_PORT                | /dev/ttyACM0                    | Set to match the port where your device is connected.                                                                                                                         |
-| SERIAL_BAUD                | 115200                          | Set to match your device's baudrate. Ignored for USB.                                                                                                                         |
-| LOGICAL_GPIO_PIN           | 1                               | Set to the logical (as opposed to physical connector pin) GPIO pin number (e.g. 1-4).                                                                                         |
-| TRIGGER_ID                 | 1                               | Selects which event trigger slot to use.                                                                                                                                      |
-| ACTION_ID                  | 1                               | Selects which event action slot to use.                                                                                                                                       |
-| FREQUENCY                  | 60                              | Sets the square wave frequency in Hz.                                                                                                                                         |
-| DUTY_CYCLE                 | 0.5                             | Sets the square wave duty cycle. 50% --> 0.5, 10% --> 0.1, etc. The minimum period is 1ms (shorter periods will only work intermittently).                                    |
+| Option                     | Default                         | Notes                                                                                                                                                                            |
+|----------------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SERIAL_PORT                | /dev/ttyACM0                    | Set to match the port where your device is connected.                                                                                                                            |
+| SERIAL_BAUD                | 115200                          | Set to match your device's baudrate. Ignored for USB.                                                                                                                            |
+| LOGICAL_GPIO_PIN           | 1                               | Set to the logical (as opposed to physical connector pin) GPIO pin number (e.g. 1-4).                                                                                            |
+| TRIGGER_ID                 | 1                               | Selects which event trigger slot to use.                                                                                                                                         |
+| ACTION_ID                  | 1                               | Selects which event action slot to use.                                                                                                                                          |
+| FREQUENCY                  | 60                              | Sets the square wave frequency in Hz.                                                                                                                                            |
+| DUTY_CYCLE                 | 0.5                             | Sets the square wave duty cycle. 50% --> 0.5, 10% --> 0.1, etc. The minimum period is 1ms (shorter periods will only work intermittently).                                       |
 | TIMESTAMP_DESCRIPTOR_SET   | 0x80 Sensor Data                | Controls which descriptor set the time is sourced from. Can be 0x80 Sensor Data, 0x82 Filter Data, 0xA0 System Data. GNSS Data sets are not supported (use system time instead). |
-| TIMESTAMP_FIELD_DESCRIPTOR | 0xD5 Internal Reference         | Controls the time reference frame is used for the square wave. Can be 0xD5 Shared Reference Time, 0xD7 Shared External Time, or 0xD3 Shared GPS Time (same as External Time). |
-| TIMESTAMP_PARAMETER        | 1 (Nanoseconds)                 | Which field from the timestamp contains the time. For all 3 fields mentioned above, parameter 1 holds the actual time quantity.                                               |
-| TIMESTAMP_INTERVAL         | 1.0 / FREQUENCY                 | [ADVANCED] Period of the square wave in units of the selected time value. For Reference and External time, this is nanoseconds. For GPS TOW, this is seconds.                 |
-| TIMESTAMP_THRESHOLD        | DUTY_CYCLE * TIEMSTAMP_INTERVAL | [ADVANCED] Threshold of the square wave in the same units as the interval. The pin will be HIGH when time is between the start of the interval and this (relative) threshold. |
+| TIMESTAMP_FIELD_DESCRIPTOR | 0xD5 Internal Reference         | Controls the time reference frame is used for the square wave. Can be 0xD5 Shared Reference Time, 0xD7 Shared External Time, or 0xD3 Shared GPS Time (same as External Time).    |
+| TIMESTAMP_PARAMETER        | 1 (Nanoseconds)                 | Which field from the timestamp contains the time. For all 3 fields mentioned above, parameter 1 holds the actual time quantity.                                                  |
+| TIMESTAMP_UNITS            | 1.0e-9 (Nanoseconds)            | Used in computing the threshold and interval from the frequency and duty cycle. Expressed as a ratio of UNIT to seconds.                                                         |
+| TIMESTAMP_INTERVAL         | 1.0 / FREQUENCY                 | [ADVANCED] Period of the square wave in units of the selected time value. For Reference and External time, this is nanoseconds. For GPS TOW, this is seconds.                    |
+| TIMESTAMP_THRESHOLD        | DUTY_CYCLE * TIEMSTAMP_INTERVAL | [ADVANCED] Threshold of the square wave in the same units as the interval. The pin will be HIGH when time is between the start of the interval and this (relative) threshold.    |
 
 
 Valid Time Sources
