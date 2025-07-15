@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <csignal>
 #include <thread>
+#include <chrono>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +107,15 @@ static_assert(TIMESTAMP_THRESHOLD < TIMESTAMP_INTERVAL, "TIMESTAMP_THRESHOLD mus
 
 bool showTriggerStatus(mip::Interface& device, bool fullDisplay=true);
 
+////////////////////////////////////////////////////////////////////////////
+// BEGIN COMMON SETUP
+////////////////////////////////////////////////////////////////////////////////
+
+int demo(mip::Interface& device);
+
 void log_callback(void*, const microstrain_log_level level, const char* fmt, va_list args)
 {
-    // Print log messages stdout using the
+    // Print log messages to stdout.
     std::printf("[%s]: ", microstrain_logging_level_name(level));
     std::vprintf(fmt, args);
 }
@@ -174,6 +181,21 @@ int main()
     //    MICROSTRAIN_LOG_FATAL("Failed to reset to default settings: %d %s\n", result.value, result.name());
     //    return 1;
     //}
+
+    return demo(device);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// END COMMON SETUP
+////////////////////////////////////////////////////////////////////////////////
+
+int demo(mip::Interface& device)
+{
+    mip::CmdResult result;
+
+    //
+    // Clear existing configuration to avoid conflicts or confusing behavior.
+    //
 
     // Reset all GPIO pins to default UNUSED feature.
     result = mip::commands_3dm::defaultGpioConfig(device, 0);
