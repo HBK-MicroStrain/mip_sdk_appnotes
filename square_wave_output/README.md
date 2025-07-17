@@ -17,8 +17,8 @@ the trigger will be activated, and when the time is between the threshold and th
 be deactivated. This sequence then repeats for the next interval.
 
 For example, if the interval is set to 10 seconds, and the threshold to 4 seconds, the trigger will
-be active when the time is between 0-3, 10-13, 20-23, etc. seconds, and inactive between 4-9, 14-19, 24-29, etc. seconds.
-The pin will be high during the active times and low otherwise, thus producing a square wave with 40% duty cycle. 
+be active when the time is between 0-4, 10-14, 20-24, etc. seconds, and inactive between 4-9, 14-19, 24-29, etc. seconds.
+The pin will be high during the active times and low otherwise, thus producing a square wave with 40% duty cycle.
 
 
 Operation
@@ -76,21 +76,21 @@ Configuration Options
 
 These values are defined at the top of the main file for clarity and to permit easy modification.
 
-| Option                     | Default                         | Notes                                                                                                                                                                            |
-|----------------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| SERIAL_PORT                | /dev/ttyACM0                    | Set to match the port where your device is connected.                                                                                                                            |
-| SERIAL_BAUD                | 115200                          | Set to match your device's baudrate. Ignored for USB.                                                                                                                            |
-| LOGICAL_GPIO_PIN           | 1                               | Set to the logical (as opposed to physical connector pin) GPIO pin number (e.g. 1-4).                                                                                            |
-| TRIGGER_ID                 | 1                               | Selects which event trigger slot to use.                                                                                                                                         |
-| ACTION_ID                  | 1                               | Selects which event action slot to use.                                                                                                                                          |
-| FREQUENCY                  | 60                              | Sets the square wave frequency in Hz.                                                                                                                                            |
-| DUTY_CYCLE                 | 0.5                             | Sets the square wave duty cycle. 50% --> 0.5, 10% --> 0.1, etc. The minimum period is 1ms (shorter periods will only work intermittently).                                       |
-| TIMESTAMP_DESCRIPTOR_SET   | 0x80 Sensor Data                | Controls which descriptor set the time is sourced from. Can be 0x80 Sensor Data, 0x82 Filter Data, 0xA0 System Data. GNSS Data sets are not supported (use system time instead). |
-| TIMESTAMP_FIELD_DESCRIPTOR | 0xD5 Internal Reference         | Controls the time reference frame is used for the square wave. Can be 0xD5 Shared Reference Time, 0xD7 Shared External Time, or 0xD3 Shared GPS Time (same as External Time).    |
-| TIMESTAMP_PARAMETER        | 1 (Nanoseconds)                 | Which field from the timestamp contains the time. For all 3 fields mentioned above, parameter 1 holds the actual time quantity.                                                  |
-| TIMESTAMP_UNITS            | 1.0e-9 (Nanoseconds)            | Used in computing the threshold and interval from the frequency and duty cycle. Expressed as a ratio of UNIT to seconds.                                                         |
-| TIMESTAMP_INTERVAL         | 1.0 / FREQUENCY                 | [ADVANCED] Period of the square wave in units of the selected time value. For Reference and External time, this is nanoseconds. For GPS TOW, this is seconds.                    |
-| TIMESTAMP_THRESHOLD        | DUTY_CYCLE * TIEMSTAMP_INTERVAL | [ADVANCED] Threshold of the square wave in the same units as the interval. The pin will be HIGH when time is between the start of the interval and this (relative) threshold.    |
+| Option                     | Default                           | Notes                                                                                                                                                                            |
+|----------------------------|-----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SERIAL_PORT                | /dev/ttyACM0                      | Set to match the port where your device is connected.                                                                                                                            |
+| SERIAL_BAUD                | 115200                            | Set to match your device's baudrate. Ignored for USB.                                                                                                                            |
+| LOGICAL_GPIO_PIN           | 1                                 | Set to the logical (as opposed to physical connector pin) GPIO pin number (e.g. 1-4).                                                                                            |
+| TRIGGER_ID                 | 1                                 | Selects which event trigger slot to use.                                                                                                                                         |
+| ACTION_ID                  | 1                                 | Selects which event action slot to use.                                                                                                                                          |
+| FREQUENCY                  | 60                                | Sets the square wave frequency in Hz.                                                                                                                                            |
+| DUTY_CYCLE                 | 0.5                               | Sets the square wave duty cycle. 50% --> 0.5, 10% --> 0.1, etc. The minimum period is 1ms (shorter periods will only work intermittently).                                       |
+| TIMESTAMP_DESCRIPTOR_SET   | 0x80 Sensor Data                  | Controls which descriptor set the time is sourced from. Can be 0x80 Sensor Data, 0x82 Filter Data, 0xA0 System Data. GNSS Data sets are not supported (use system time instead). |
+| TIMESTAMP_FIELD_DESCRIPTOR | 0xD5 Internal Reference           | Controls the time reference frame is used for the square wave. Can be 0xD5 Shared Reference Time, 0xD7 Shared External Time, or 0xD3 Shared GPS Time (same as External Time).    |
+| TIMESTAMP_PARAMETER        | 1 (Nanoseconds since startup)     | Which field from the timestamp contains the time. For all 3 fields mentioned above, parameter 1 holds the actual time quantity.                                                  |
+| TIMESTAMP_UNITS            | 1.0e-9 (Nanoseconds)              | Used in computing the threshold and interval from the frequency and duty cycle. Expressed as a ratio of UNIT to seconds.                                                         |
+| TIMESTAMP_INTERVAL         | 1.0 / FREQUENCY / TIMESTAMP_UNITS | [ADVANCED] Period of the square wave in units of the selected time value. For Reference and External time, this is nanoseconds. For GPS TOW, this is seconds.                    |
+| TIMESTAMP_THRESHOLD        | DUTY_CYCLE * TIMESTAMP_INTERVAL   | [ADVANCED] Threshold of the square wave in the same units as the interval. The pin will be HIGH when time is between the start of the interval and this (relative) threshold.    |
 
 
 Valid Time Sources
@@ -113,6 +113,5 @@ for a description of the differences between these quantities.
 * [0xD7 External Timestamp](https://s3.amazonaws.com/files.microstrain.com/CV7+Online/external_content/dcp/Data/0xff/data/0xd7.htm)
 * [0xD3 GPS Timestamp](https://s3.amazonaws.com/files.microstrain.com/CV7+Online/external_content/dcp/Data/0xff/data/0xd3.htm)
   Note: For CV7, this is the same as the External Timestamp, just formatted as GPS Time.
-  If you select this option, the interval and threshold units must be changed from
-  nanoseconds to seconds.
+  If you select this option, the units must be changed from nanoseconds to seconds.
 
