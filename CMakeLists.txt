@@ -27,3 +27,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(mip_sdk)
 
 add_subdirectory(square_wave_output)
+add_subdirectory(estop)
