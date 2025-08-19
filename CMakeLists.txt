@@ -26,5 +26,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(mip_sdk)
 
-add_subdirectory(square_wave_output)
 add_subdirectory(estop)
+add_subdirectory(gpio_gated_streaming)
+add_subdirectory(synchronized_data_output)
+add_subdirectory(square_wave_output)

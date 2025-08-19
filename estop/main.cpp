@@ -8,9 +8,6 @@
 #include <mip/definitions/data_sensor.hpp>
 
 #include <cstdio>
-#include <csignal>
-#include <thread>
-#include <chrono>
 
 #define _USE_MATH_DEFINES
 #include <cmath>

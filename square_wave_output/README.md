@@ -3,7 +3,8 @@ Synchronized Square Wave Output
 ===============================
 
 This is the companion project for the application note
-[Syncrhonized Square Wave Output](https://s3.amazonaws.com/files.microstrain.com/CV7+Online/user_manual_content/app_notes/Example%20Square%20Wave%20Output.htm)
+[Synchronized Square Wave Output](https://s3.amazonaws.com/files.microstrain.com/CV7+Online/user_manual_content/app_notes/Example%20Square%20Wave%20Output.htm)
+Note that the default parameters may not match the app note exactly.
 
 
 This project will configure the device to output a square wave on one of the GPIO pins using the event system.
@@ -115,3 +116,9 @@ for a description of the differences between these quantities.
   Note: For CV7, this is the same as the External Timestamp, just formatted as GPS Time.
   If you select this option, the units must be changed from nanoseconds to seconds.
 
+
+Building and Running
+--------------------
+
+Follow the usual CMake steps described in the top-level readme.
+The executable will be located at `build/square_wave_output/SquareWaveOutput`.

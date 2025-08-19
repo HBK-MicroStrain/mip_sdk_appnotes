@@ -23,84 +23,26 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-//
-// Device Connection
-//
-
 // This is the port used to communicate with the device.
-constexpr const char* const SERIAL_PORT = "/dev/ttyACM0";
+static constexpr const char* const SERIAL_PORT = "/dev/ttyACM0";
 
 // This should match the device's baud rate.
-constexpr uint32_t    SERIAL_BAUD = 115200;
+static constexpr uint32_t    SERIAL_BAUD = 115200;
 
-// Optionally clear the device configuration before starting.
-// This could be useful if there are conflicting settings or unexpected
-// behavior. The settings related to this demo are always cleared regardless.
-// Note that this will reset the UART baudrate(s) to 115200.
-constexpr bool APPLY_DEFAULT_SETTINGS = false;
+// Trigger instance numbers.
+static constexpr uint8_t TRIGGER_A_ID = 1;
+static constexpr uint8_t TRIGGER_B_ID = 2;
 
-//
-// Event GPIO Action
-//
+// Everything from the sensor dataset.
+static constexpr uint8_t TRIGGER_A_DESC_SET = mip::data_sensor::DESCRIPTOR_SET;
+static constexpr uint8_t TRIGGER_B_DESC_SET = mip::data_sensor::DESCRIPTOR_SET;
 
-// The square wave will be output on this logical GPIO pin number.
-constexpr uint8_t LOGICAL_GPIO_PIN = 1;
+// Acceleration (threshold) and  Reference Time (interval)
+static constexpr uint8_t TRIGGER_A_FIELD_DESC = mip::data_sensor::DATA_ACCEL_SCALED;
+static constexpr uint8_t TRIGGER_B_FIELD_DESC = mip::data_shared::DATA_REFERENCE_TIME;
 
-// Action instance number.
-constexpr uint8_t ACTION_ID  = 1;
-
-//
-// Event Trigger
-//
-
-// Trigger instance number.
-constexpr uint8_t TRIGGER_ID = 1;
-
-// Square wave frequency in Hz.
-constexpr double FREQUENCY = 60.0;
-
-// Square wave duty cycle in the range 0 to 1.
-// E.g. 50% --> 0.5 or 10% --> 0.1
-constexpr double DUTY_CYCLE = 0.5;
-
-
-// The square wave will be synchronized with the timestamp from this descriptor set.
-//const uint8_t TIMESTAMP_DESCRIPTOR_SET = mip::data_sensor::DESCRIPTOR_SET;
-//const uint8_t TIMESTAMP_DESCRIPTOR_SET = mip::data_filter::DESCRIPTOR_SET;
-constexpr uint8_t TIMESTAMP_DESCRIPTOR_SET = mip::data_system::DESCRIPTOR_SET;
-
-// Select one of these options:
-// - Reference Time [default]: Internal reference time in nanoseconds.
-// - External Time:            External synchronized time (e.g. GNSS) in nanoseconds.
-// - GPS Time:                 Same as external time, but with time of week in seconds. Requires changing threshold (see below).
-constexpr uint8_t TIMESTAMP_FIELD_DESCRIPTOR = mip::data_shared::DATA_REFERENCE_TIME;
-//const uint8_t TIMESTAMP_FIELD_DESCRIPTOR = mip::data_shared::DATA_EXTERNAL_TIME;
-//const uint8_t TIMESTAMP_FIELD_DESCRIPTOR = mip::data_shared::DATA_GPS_TIME;
-
-// Selects which parameter in the corresponding timestamp field is used for comparison.
-// For reference and external timestamps, the first parameter is nanoseconds.
-// For GPS time, Time of Week (TOW) is the first parameter.
-constexpr uint8_t TIMESTAMP_PARAMETER = 1;
-
-// Units for the timestamp field. This is only used for the math in this section.
-// You may ignore this value if setting TIMESTAMP_INTERVAL yourself (in which case,
-// you may also need to disable some of the validation checks if they complain).
-constexpr double TIMESTAMP_UNITS = 1.0e-9;  // Nanoseconds, for Internal or External Timestamps.
-//static constexpr double TIMESTAMP_UNITS = 1.0;     // Seconds, for GPS Time.
-
-// This value is what actually controls the period of the square wave.
-// The units are determined by the specific timestamp field chosen.
-// By default, and for explanatory purposes, it is computed from the FREQUENCY and
-// TIMESTAMP_UNITS values, but you may override that logic if you wish to set it directly.
-// If you do set this parameter manually, FREQUENCY will no longer be used.
-// You may still need to set TIMESTAMP_UNITS so that the validation assertions don't complain.
-constexpr double TIMESTAMP_INTERVAL  = 1.0 / (TIMESTAMP_UNITS * FREQUENCY);
-
-// This value is what actually controls the duty cycle. The pin will be HIGH
-// when the time is between the start of the interval and this value (relative to the start of the interval).
-// Duty cycle = threshold / interval.
-// If you set this parameter manually, DUTY_CYCLE will no longer be used.
-constexpr double TIMESTAMP_THRESHOLD = DUTY_CYCLE * TIMESTAMP_INTERVAL;
+static constexpr uint8_t TRIGGER_A_PARAM = 1;  // For scaled accel, 1=X, 2=Y, 3=Z (see the field definition in the DCP).
+static constexpr uint8_t TRIGGER_B_PARAM = 2;  // For ref time, 1=nanoseconds.
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -108,24 +50,10 @@ constexpr double TIMESTAMP_THRESHOLD = DUTY_CYCLE * TIMESTAMP_INTERVAL;
 // Basic sanity checks on parameters.
 //
 
-static_assert(SERIAL_BAUD == 115200 || !APPLY_DEFAULT_SETTINGS, "APPLY_DEFAULT_SETTINGS will reset the baudrate to 115200 and lose the connection.");
-
-static_assert(LOGICAL_GPIO_PIN >= 1 && LOGICAL_GPIO_PIN <= 4, "LOGICAL_GPIO_PIN must be within [1,4] for CV7.");
-static_assert(TRIGGER_ID >= 1 && TRIGGER_ID <= 12, "TRIGGER_ID must be within [1,12] for CV7.");
-static_assert(ACTION_ID >= 1 && ACTION_ID <= 12, "ACTION_ID must be within [1,12] for CV7.");
-static_assert(FREQUENCY <= 1000.0, "Maximum frequency is 1000 Hz for CV7.");
-static_assert(DUTY_CYCLE >= 0 && DUTY_CYCLE <= 1.0, "DUTY_CYCLE must be between 0 and 1.");
-static_assert(TIMESTAMP_INTERVAL*TIMESTAMP_UNITS > 0.001, "TIMESTAMP_INTERVAL must be at least 1 ms.");
-static_assert(TIMESTAMP_INTERVAL*TIMESTAMP_UNITS < 1000, "TIMESTAMP_INTERVAL is > 1000 s, this is probably not what you wanted. Check the units.");
-static_assert(TIMESTAMP_THRESHOLD*TIMESTAMP_UNITS > 0.001, "TIMESTAMP_THRESHOLD must be at least 1 ms.");
-static_assert(TIMESTAMP_THRESHOLD < TIMESTAMP_INTERVAL, "TIMESTAMP_THRESHOLD must be less than TIMESTAMP_INTERVAL.");
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-
-bool showTriggerStatus(mip::Interface& device, bool fullDisplay=true);
 
 ////////////////////////////////////////////////////////////////////////////
 // BEGIN COMMON SETUP
@@ -187,20 +115,20 @@ int main()
     // Clear existing configuration to avoid conflicts or confusing behavior.
     //
 
-    if(APPLY_DEFAULT_SETTINGS)
-    {
-        // Reset to default settings.
-        // This will lose communications if the baud rate is not the default 115200 value.
-        // Instead, reset just the relevant configurations below.
-        // This ensures the example runs as expected by starting with a clean slate.
+    // This is technically optional, but ensures the example runs as expected by starting
+    // with a clean slate.
 
-        result = mip::commands_3dm::defaultDeviceSettings(device);
-        if(!result)
-        {
-            MICROSTRAIN_LOG_FATAL("Failed to reset to default settings: %d %s\n", result.value, result.name());
-            return 1;
-        }
-    }
+
+    // Reset to default settings.
+    // This will lose communications if the baud rate is not the default 115200 value.
+    // Instead, reset just the relevant configurations below.
+
+    //result = mip::commands_3dm::defaultDeviceSettings(device);
+    //if(!result)
+    //{
+    //    MICROSTRAIN_LOG_FATAL("Failed to reset to default settings: %d %s\n", result.value, result.name());
+    //    return 1;
+    //}
 
     return demo(device);
 }
@@ -208,6 +136,9 @@ int main()
 ////////////////////////////////////////////////////////////////////////////////
 // END COMMON SETUP
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 int demo(mip::Interface& device)
 {
@@ -217,32 +148,20 @@ int demo(mip::Interface& device)
     // Clear existing configuration to avoid conflicts or confusing behavior.
     //
 
-    // This is only needed if the global configuration has not been cleared already.
-    if(!APPLY_DEFAULT_SETTINGS)
+    // Clear all event triggers.
+    result = mip::commands_3dm::defaultEventTrigger(device, 0);
+    if(!result)
     {
-        // Reset all GPIO pins to default UNUSED feature.
-        result = mip::commands_3dm::defaultGpioConfig(device, 0);
-        if(!result)
-        {
-            MICROSTRAIN_LOG_FATAL("Failed to reset all GPIO pins: %d %s\n", result.value, result.name());
-            return 1;
-        }
+        MICROSTRAIN_LOG_FATAL("Failed to reset event triggers: %d %s\n", result.value, result.name());
+        return 1;
+    }
 
-        // Clear all event triggers.
-        result = mip::commands_3dm::defaultEventTrigger(device, 0);
-        if(!result)
-        {
-            MICROSTRAIN_LOG_FATAL("Failed to reset event triggers: %d %s\n", result.value, result.name());
-            return 1;
-        }
-
-        // Clear all event actions.
-        result = mip::commands_3dm::defaultEventAction(device, 0);
-        if(!result)
-        {
-            MICROSTRAIN_LOG_FATAL("Failed to reset event actions: %d %s\n", result.value, result.name());
-            return 1;
-        }
+    // Clear all event actions.
+    result = mip::commands_3dm::defaultEventAction(device, 0);
+    if(!result)
+    {
+        MICROSTRAIN_LOG_FATAL("Failed to reset event actions: %d %s\n", result.value, result.name());
+        return 1;
     }
 
     // Show that the trigger is not enabled nor active yet.
@@ -449,6 +368,12 @@ bool showTriggerStatus(mip::Interface& device, bool fullDisplay)
         return false;
     }
 
+    mip::commands_3dm::PollData pollCmd;
+    pollCmd.suppress_ack = false;
+    pollCmd.desc_set = TIMESTAMP_DESCRIPTOR_SET;
+    pollCmd.descriptors[0] = TIMESTAMP_FIELD_DESCRIPTOR;
+
+
     if(fullDisplay)
     {
         // The trigger status is a bitfield of 3 flags.
@@ -462,7 +387,7 @@ bool showTriggerStatus(mip::Interface& device, bool fullDisplay)
     }
     else
     {
-        const char active = statusRsp.triggers[0].status.active() ? '+' : '-';
+        const char active  = statusRsp.triggers[0].status.active()  ? '+' : '-';
 
         // Just print an X or space with no newline, for high update speed.
         putchar(active);
