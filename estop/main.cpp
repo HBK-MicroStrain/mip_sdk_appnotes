@@ -21,14 +21,21 @@
 // This is the port used to communicate with the device.
 constexpr const char* const SERIAL_PORT = "/dev/ttyACM0";
 
-// This should match the device's baud rate.
+// This should match the device's UART baud rate, if using a serial connection.
+// You do not need to change this for USB connections.
 constexpr uint32_t SERIAL_BAUD = 115200;
 
+// Optionally clear the device configuration before starting.
+// This could be useful if there are conflicting settings or unexpected
+// behavior. The settings related to this demo are always cleared regardless.
+// Note that this will reset the UART baudrate(s) to 115200.
+constexpr bool APPLY_DEFAULT_SETTINGS = false;
+
 //
-// Trigger Behavior
+// Event Trigger
 //
 
-// Trigger and action instance numbers.
+// Trigger instance number.
 constexpr uint8_t TRIGGER_ID = 1;
 
 // Trigger data quantity - Euler angles (could also use filter euler attitude)
@@ -42,13 +49,14 @@ constexpr float THRESHOLD_LOW  = -M_PI / 4;
 constexpr float THRESHOLD_HIGH = +M_PI / 4;
 
 //
-// Action configuration
+// Event Action
 //
 
+// Action instance number.
 constexpr uint8_t ACTION_ID  = 1;
 
 // Logical GPIO pin number. All pins 1-4 are supported.
-constexpr uint8_t GPIO_PIN = 3;
+constexpr uint8_t GPIO_PIN = 1;
 
 // Behavior of the robot's E-Stop system:
 // Is the e-stop input a dedicated digital input from the CV7, or is it shared?
@@ -80,7 +88,10 @@ constexpr bool ESTOP_ONE_SHOT = false;
 //
 // Basic sanity checks on parameters.
 //
-static_assert(GPIO_PIN >= 1 && GPIO_PIN <= 4, "GPIO pin must be in the range [1-4].");
+
+static_assert(SERIAL_BAUD == 115200 || !APPLY_DEFAULT_SETTINGS, "APPLY_DEFAULT_SETTINGS will reset the baudrate to 115200 and lose the connection.");
+
+static_assert(GPIO_PIN >= 1 && GPIO_PIN <= 4, "Pin must be in the range [1-4].");
 
 static_assert(!ESTOP_OPEN_DRAIN || ESTOP_POLARITY==false, "Polarity must be active low when using open drain mode.");
 static_assert(!ESTOP_OD_PULLUP || ESTOP_OPEN_DRAIN, "Pull-up resistor can only be used in open-drain mode.");
@@ -89,7 +100,7 @@ static_assert(!ESTOP_OD_PULLUP || ESTOP_OPEN_DRAIN, "Pull-up resistor can only b
 ////////////////////////////////////////////////////////////////////////////////
 
 
-////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // BEGIN COMMON SETUP
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,20 +160,20 @@ int main()
     // Clear existing configuration to avoid conflicts or confusing behavior.
     //
 
-    // This is technically optional, but ensures the example runs as expected by starting
-    // with a clean slate.
+    if(APPLY_DEFAULT_SETTINGS)
+    {
+        // Reset to default settings.
+        // This will lose communications if the baud rate is not the default 115200 value.
+        // Instead, reset just the relevant configurations below.
+        // This ensures the example runs as expected by starting with a clean slate.
 
-
-    // Reset to default settings.
-    // This will lose communications if the baud rate is not the default 115200 value.
-    // Instead, reset just the relevant configurations below.
-
-    //result = mip::commands_3dm::defaultDeviceSettings(device);
-    //if(!result)
-    //{
-    //    MICROSTRAIN_LOG_FATAL("Failed to reset to default settings: %d %s\n", result.value, result.name());
-    //    return 1;
-    //}
+        result = mip::commands_3dm::defaultDeviceSettings(device);
+        if(!result)
+        {
+            MICROSTRAIN_LOG_FATAL("Failed to reset to default settings: %d %s\n", result.value, result.name());
+            return 1;
+        }
+    }
 
     return demo(device);
 }
@@ -182,20 +193,24 @@ int demo(mip::Interface& device)
     // Clear existing configuration to avoid conflicts or confusing behavior.
     //
 
-    // Clear all event triggers.
-    result = mip::commands_3dm::defaultEventTrigger(device, 0);
-    if(!result)
+    // This is only needed if the global configuration has not been cleared already.
+    if(!APPLY_DEFAULT_SETTINGS)
     {
-        MICROSTRAIN_LOG_FATAL("Failed to reset event triggers: %d %s\n", result.value, result.name());
-        return 1;
-    }
+        // Clear all event triggers.
+        result = mip::commands_3dm::defaultEventTrigger(device, 0);
+        if(!result)
+        {
+            MICROSTRAIN_LOG_FATAL("Failed to reset event triggers: %d %s\n", result.value, result.name());
+            return 1;
+        }
 
-    // Clear all event actions.
-    result = mip::commands_3dm::defaultEventAction(device, 0);
-    if(!result)
-    {
-        MICROSTRAIN_LOG_FATAL("Failed to reset event actions: %d %s\n", result.value, result.name());
-        return 1;
+        // Clear all event actions.
+        result = mip::commands_3dm::defaultEventAction(device, 0);
+        if(!result)
+        {
+            MICROSTRAIN_LOG_FATAL("Failed to reset event actions: %d %s\n", result.value, result.name());
+            return 1;
+        }
     }
 
     //
