@@ -202,8 +202,7 @@ mip::CmdResult configure_message_action(
     mip::Interface& device,
     uint8_t action_id,
     uint8_t desc_set,
-    microstrain::Span<const uint8_t> field_descriptors,
-    uint16_t output_rate
+    microstrain::Span<const uint8_t> field_descriptors
 );
 
 
@@ -306,8 +305,8 @@ int demo(mip::Interface& device)
     constexpr uint16_t ONESHOT_DECIMATION = 0;  // Use decimation=0 for oneshot / edge-trigger mode.
 
     bool ok = true;
-    ok = ok && configure_message_action(device, ACTION_ID_SENSOR, mip::data_sensor::DESCRIPTOR_SET, FIELD_DESCRIPTORS_SPAN_SENSOR, ONESHOT_DECIMATION);
-    ok = ok && configure_message_action(device, ACTION_ID_FILTER, mip::data_filter::DESCRIPTOR_SET, FIELD_DESCRIPTORS_SPAN_FILTER, ONESHOT_DECIMATION);
+    ok = ok && configure_message_action(device, ACTION_ID_SENSOR, mip::data_sensor::DESCRIPTOR_SET, FIELD_DESCRIPTORS_SPAN_SENSOR);
+    ok = ok && configure_message_action(device, ACTION_ID_FILTER, mip::data_filter::DESCRIPTOR_SET, FIELD_DESCRIPTORS_SPAN_FILTER);
     if(!ok)
         return 1;
 
@@ -418,29 +417,10 @@ mip::CmdResult configure_message_action(
     mip::Interface& device,
     uint8_t action_id,
     uint8_t desc_set,
-    microstrain::Span<const uint8_t> field_descriptors,
-    uint16_t output_rate
+    microstrain::Span<const uint8_t> field_descriptors
 )
 {
     mip::CmdResult result;
-
-    // First, get the base rate of the descriptor set so the decimation can be computed.
-    uint16_t base_rate = 0;
-    result = mip::commands_3dm::getBaseRate(device, desc_set, &base_rate);
-    if(!result)
-    {
-        MICROSTRAIN_LOG_FATAL("Failed to get the base rate for descriptor set 0x%02X: %d %s\n", desc_set, result.value, result.name());
-        return result;
-    }
-    if(base_rate == 0)
-    {
-        MICROSTRAIN_LOG_FATAL("Base rate of 0 is unexpected for descriptor set 0x%02X.\n", desc_set);
-        return mip::CmdResult::STATUS_ERROR;
-    }
-
-    // Solve for decimation: output_rate = base_rate / decimation
-    // ==> decimation = base_rate / output_rate
-    uint16_t decimation = base_rate / output_rate;
 
     mip::commands_3dm::EventAction action;
 
@@ -450,7 +430,7 @@ mip::CmdResult configure_message_action(
     action.type     = mip::commands_3dm::EventAction::Type::MESSAGE;
 
     action.parameters.message.desc_set   = desc_set;
-    action.parameters.message.decimation = decimation;
+    action.parameters.message.decimation = 0;  // Oneshot mode requires decimation 0.
     action.parameters.message.num_fields = field_descriptors.size();
 
     // Copy descriptors to the command structure.
