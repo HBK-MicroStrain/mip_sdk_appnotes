@@ -17,15 +17,21 @@ set(MICROSTRAIN_CMAKE_DEBUG         OFF CACHE INTERNAL "" FORCE)
 set(MIP_ENABLE_DIAGNOSTICS          OFF CACHE INTERNAL "" FORCE)
 set(MIP_ENABLE_EXTRAS               OFF CACHE INTERNAL "" FORCE)
 
-include(FetchContent)
 
-FetchContent_Declare(
-    mip_sdk
-    GIT_REPOSITORY "https://github.com/HBK-MicroStrain/mip_sdk.git"
-    GIT_TAG 92d90f61e567d71eff778b5a54d34eeff13b6a02  # develop, Feb 2026
-)
+if(MIP_SDK_DIR)
+    add_subdirectory(${MIP_SDK_DIR} ${CMAKE_CURRENT_BINARY_DIR}/MIP_SDK)
 
-FetchContent_MakeAvailable(mip_sdk)
+else()
+    include(FetchContent)
+
+    FetchContent_Declare(
+        mip_sdk
+        GIT_REPOSITORY "https://github.com/HBK-MicroStrain/mip_sdk.git"
+        GIT_TAG 92d90f61e567d71eff778b5a54d34eeff13b6a02  # develop, Feb 2026
+    )
+
+    FetchContent_MakeAvailable(mip_sdk)
+endif()
 
 # Enable microstrain logging in all subprojects.
 add_compile_definitions("MICROSTRAIN_LOGGING_MAX_LEVEL=MICROSTRAIN_LOGGING_LEVEL_TRACE_")

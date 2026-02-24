@@ -13,9 +13,9 @@ Building and Running
 Prerequisites
 -------------
 
-* git
+* git (optional, see note below)
 * cmake (v3.22 or later)
-* A working C++ compiler
+* A working C++17 compiler (C++14 or 11 may work, but are not tested)
 
 Steps
 -----
@@ -34,3 +34,8 @@ Steps
 Note that you'll likely need to modify the configuration options in the source code, which are described in the README
 for each project. In particular, the `SERIAL_PORT` and `SERIAL_BAUD` parameters may need to be changed to match your
 setup.
+
+Note: CMake will automatically clone the required version of the MIP SDK via FetchContent. This requires git and an
+internet connection. If these are not available, you can use an existing offline copy by passing `-DMIP_SDK_DIR=/path/to/mip_sdk`
+to cmake during configuration (step 2). It must be approximately the correct version as referenced by `GIT_TAG` in
+CMakeLists.txt.
