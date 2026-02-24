@@ -57,7 +57,7 @@ constexpr uint8_t ACTION_ID  = 1;
 constexpr uint8_t TRIGGER_ID = 1;
 
 // Square wave frequency in Hz.
-constexpr double FREQUENCY = 60.0;
+constexpr double FREQUENCY = 16.67;
 
 // Square wave duty cycle in the range 0 to 1.
 // E.g. 50% --> 0.5 or 10% --> 0.1

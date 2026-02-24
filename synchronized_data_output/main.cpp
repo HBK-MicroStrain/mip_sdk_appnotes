@@ -1,7 +1,7 @@
 
 #include <microstrain/logging.hpp>
 #include <microstrain/connections/serial/serial_connection.hpp>
-#include <microstrain/span.hpp>
+#include <microstrain/array_view.hpp>
 
 #include <mip/mip_interface.hpp>
 #include <mip/definitions/commands_base.hpp>
@@ -81,8 +81,8 @@ constexpr uint8_t FIELD_DESCRIPTORS_FILTER[] = {
 };
 
 // Convert to spans for easy reference below.
-constexpr microstrain::Span<const uint8_t> FIELD_DESCRIPTORS_SPAN_SENSOR( FIELD_DESCRIPTORS_SENSOR );
-constexpr microstrain::Span<const uint8_t> FIELD_DESCRIPTORS_SPAN_FILTER( FIELD_DESCRIPTORS_FILTER );
+constexpr microstrain::ConstU8ArrayView FIELD_DESCRIPTORS_SPAN_SENSOR( FIELD_DESCRIPTORS_SENSOR );
+constexpr microstrain::ConstU8ArrayView FIELD_DESCRIPTORS_SPAN_FILTER( FIELD_DESCRIPTORS_FILTER );
 
 //
 // Misc
@@ -202,7 +202,7 @@ mip::CmdResult configure_message_action(
     mip::Interface& device,
     uint8_t action_id,
     uint8_t desc_set,
-    microstrain::Span<const uint8_t> field_descriptors
+    microstrain::ConstU8ArrayView field_descriptors
 );
 
 
@@ -417,7 +417,7 @@ mip::CmdResult configure_message_action(
     mip::Interface& device,
     uint8_t action_id,
     uint8_t desc_set,
-    microstrain::Span<const uint8_t> field_descriptors
+    microstrain::ConstU8ArrayView field_descriptors
 )
 {
     mip::CmdResult result;
